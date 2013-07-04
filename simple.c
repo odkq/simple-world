@@ -121,6 +121,14 @@ static void gl_process(int id)
 		pos[0] += delta;
 		keys['d'] = 0;
 	}
+	if (keys['q'] == 1) {
+		pos[2] -= delta;
+		keys['q'] = 0;
+	}
+	if (keys['e'] == 1) {
+		pos[2] += delta;
+		keys['e'] = 0;
+	}
 	glutTimerFunc(1, gl_process, 0);
 }
 
