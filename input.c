@@ -31,7 +31,8 @@ void input_poll(void)
 
 	for (i = 0; i < 256; i++) {
 		if (key[i].set == 1) {
-			key[i].callback(key[i].data);
+			if (key[i].callback != NULL)
+				key[i].callback(key[i].data);
 			key[i].set = 0;
 		}
 	}

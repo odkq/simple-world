@@ -34,6 +34,8 @@ static void change_texture(int t);
 static void move(int t);
 static void quit(int t);
 
+static void move_quad(float *quad, int c, float delta);
+
 float pos[3] = { -1.0f, 0.0f, -6.0f };
 
 int tex = TEX_TEST1;
@@ -102,6 +104,7 @@ static void gl_print_quad(float *coords, int tex)
 
 static void gl_redraw(void)
 {
+	int i;
 	float quad[12] = {
 		-1.0f, 1.0f, 0.0f,
 		1.0f, 1.0f, 0.0f,
@@ -114,12 +117,43 @@ static void gl_redraw(void)
 	// glTranslatef(-1.5f,0.0f,-6.0f);
 	glTranslatef(pos[0], pos[1], pos[2]);
 	gl_print_quad(quad, tex);
+	/* Some turtle graphics */
+	for(i = 0; i < 3; i++) {
+		move_quad(quad, 0, 2.0);
+		gl_print_quad(quad, tex);
+	}
+	move_quad(quad, 1, 2.0);
+	gl_print_quad(quad, tex);
+	for(i = 0; i < 3; i++) {
+		move_quad(quad, 0, -2.0);
+		gl_print_quad(quad, tex);
+	}
+	move_quad(quad, 1, 2.0);
+	gl_print_quad(quad, tex);
+	for(i = 0; i < 3; i++) {
+		move_quad(quad, 0, 2.0);
+		gl_print_quad(quad, tex);
+	}
 	glutSwapBuffers();
 }
 
 static void change_texture(int t)
 {
 	tex = t;
+}
+
+static void move_quad(float *quad, int c, float d)
+{
+	int i;
+
+	int delta[3][4] =
+		{{ 0, 3, 6, 9 },
+		{ 1, 4, 7, 10 },
+		{ 2, 5, 8, 11 }};
+
+	for (i = 0; i < 4; i++) {
+		quad[delta[c][i]] += d;
+	}
 }
 
 static void move(int t)
