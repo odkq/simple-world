@@ -9,13 +9,13 @@ Compile
 Make sure you have python, gl development libraries:
 
 ```
-# apt-get install python freeglut3-dev libgl1-mesa-dev build-essential
+sudo install python freeglut3-dev libgl1-mesa-dev build-essential
 ```
 
 and ..
 
 ```
-$ make
+make
 ```
 
 Run
