@@ -1,12 +1,11 @@
 CFLAGS = -Wall -I.
 LIBS = -lX11 -lXi -lXmu -lglut -lGL -lGLU -lm 
-OBJS = simple.o graphic.o
+OBJS = simple.o graphic.o input.o
 
 # "Compress" textures by default
 COMPRESS ?= true
 
 all: simple-world
-
 
 textures.h: data/test1.bmp data/test2.bmp data/test3.bmp
 ifeq ($(COMPRESS), true)
@@ -18,8 +17,8 @@ endif
 graphic.o: graphic.c textures.h
 	$(CC) -c $(CFLAGS) graphic.c -o graphic.o
 
-simple.o: simple.c
-	$(CC) -c $(CFLAGS) simple.c -o simple.o
+%.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
 simple-world: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o simple-world $(LIBS)

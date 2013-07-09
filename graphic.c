@@ -6,6 +6,7 @@
 
 #include <textures.h>
 #include <graphic.h>
+#include <input.h>
 
 #define WINDOW_TITLE "Simple World"
 
@@ -28,10 +29,10 @@ static struct graphic gl;
 static void gl_resize(int, int);
 static void gl_redraw(void);
 static void gl_keypress(unsigned char, int, int);
-
 static void gl_process(int id);
-
-unsigned char keys[256];
+static void change_texture(int t);
+static void move(int t);
+static void quit(int t);
 
 float pos[3] = { -1.0f, 0.0f, -6.0f };
 
@@ -69,7 +70,18 @@ int gl_start(int argc, char **argv)
 	gluPerspective(45.0f,(GLfloat)gl.width/(GLfloat)gl.height, 0.1f, 100.0f);
 	glMatrixMode(GL_MODELVIEW);
 	glutTimerFunc(1, gl_process, 0);
-	memset((void *)keys, 0, 256);
+
+	input_register('1', change_texture, TEX_TEST1);
+	input_register('2', change_texture, TEX_TEST2);
+	input_register('3', change_texture, TEX_TEST3);
+	input_register('w', move, 'w');
+	input_register('s', move, 's');
+	input_register('a', move, 'a');
+	input_register('d', move, 'd');
+	input_register('q', move, 'q');
+	input_register('e', move, 'e');
+	input_register('0', quit, 0);
+
 	return argc;	/* Return argc with first non-x11 argument pointer */
 }
 
@@ -87,6 +99,7 @@ static void gl_print_quad(float *coords, int tex)
 	glVertex3f(coords[9], coords[10],  coords[11]);
 	glEnd();
 }
+
 static void gl_redraw(void)
 {
 	float quad[12] = {
@@ -103,52 +116,37 @@ static void gl_redraw(void)
 	gl_print_quad(quad, tex);
 	glutSwapBuffers();
 }
+
+static void change_texture(int t)
+{
+	tex = t;
+}
+
+static void move(int t)
+{
+	float delta = 0.1f;
+
+	switch(t) {
+		case 'w': pos[1] += delta; break;
+		case 's': pos[1] -= delta; break;
+		case 'a': pos[0] -= delta; break;
+		case 'd': pos[0] += delta; break;
+		case 'q': pos[2] -= delta; break;
+		case 'e': pos[2] += delta; break;
+	}
+}
+
+static void quit(int t)
+{
+	gl_end();
+	exit(0);
+}
+
 // int move(int axis,
 /* Called each 10 mils */
 static void gl_process(int id)
 {
-	float delta = 0.1f;
-
-	if (keys['0'] == 1) {
-		gl_end();
-		exit(0);
-	}
-	if (keys['1'] == 1) {
-		tex = TEX_TEST1;
-		keys['1'] = 0;
-	}
-	if (keys['2'] == 1) {
-		tex = TEX_TEST2;
-		keys['2'] = 0;
-	}
-	if (keys['3'] == 1) {
-		tex = TEX_TEST3;
-		keys['3'] = 0;
-	}
-	if (keys['w'] == 1) {
-		pos[1] += delta;
-		keys['w'] = 0;
-	}
-	if (keys['s'] == 1) {
-		pos[1] -= delta;
-		keys['s'] = 0;
-	}
-	if (keys['a'] == 1) {
-		pos[0] -= delta;
-		keys['a'] = 0;
-	}
-	if (keys['d'] == 1) {
-		pos[0] += delta;
-		keys['d'] = 0;
-	}
-	if (keys['q'] == 1) {
-		pos[2] -= delta;
-		keys['q'] = 0;
-	}
-	if (keys['e'] == 1) {
-		pos[2] += delta;
-		keys['e'] = 0;
-	}
+	input_poll();
 	glutTimerFunc(1, gl_process, 0);
 }
 
@@ -167,7 +165,7 @@ static void gl_resize(int w, int h)
 /* The function called whenever a key is pressed. */
 static void gl_keypress(unsigned char k, int x, int y)
 {
-	keys[k] = 1;
+	input_set(k);
 }
 
 void gl_loop(void)
