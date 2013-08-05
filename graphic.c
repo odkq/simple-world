@@ -28,7 +28,9 @@ static struct graphic gl;
 
 static void gl_resize(int, int);
 static void gl_redraw(void);
+static void gl_redraw2(void);
 static void gl_keypress(unsigned char, int, int);
+static void gl_special_keypress(int k, int xx, int yy);
 static void gl_process(int id);
 static void change_texture(int t);
 static void move(int t);
@@ -39,6 +41,13 @@ static void move_quad(float *quad, int c, float delta);
 float pos[3] = { -1.0f, 0.0f, -6.0f };
 
 int tex = TEX_TEST1;
+
+// angle of rotation for the camera direction
+float angle=0.0;
+// actual vector representing the camera's direction
+float lx=0.0f,lz=-1.0f;
+// XZ position of the camera
+float x=0.0f,z=5.0f;
 
 /* opengl initialization boilerplate */
 int gl_start(int argc, char **argv)
@@ -54,11 +63,12 @@ int gl_start(int argc, char **argv)
 	glutInitWindowSize(gl.width, gl.height);
 	glutInitWindowPosition(0, 0);
 	gl.window = glutCreateWindow(WINDOW_TITLE);
-	glutDisplayFunc(&gl_redraw);
+	glutDisplayFunc(&gl_redraw2);
 	glutFullScreen(); 
-	glutIdleFunc(&gl_redraw);
+	glutIdleFunc(&gl_redraw2);
 	glutReshapeFunc(&gl_resize);
 	glutKeyboardFunc(&gl_keypress);
+	glutSpecialFunc(&gl_special_keypress);
 	textures_init();
 	glEnable(GL_TEXTURE_2D);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -83,7 +93,10 @@ int gl_start(int argc, char **argv)
 	input_register('q', move, 'q');
 	input_register('e', move, 'e');
 	input_register('0', quit, 0);
-
+    input_register(GLUT_KEY_LEFT + 0xff, move, GLUT_KEY_LEFT + 0xff);
+    input_register(GLUT_KEY_RIGHT + 0xff, move, GLUT_KEY_RIGHT + 0xff);
+    input_register(GLUT_KEY_UP + 0xff, move, GLUT_KEY_UP + 0xff);
+    input_register(GLUT_KEY_DOWN + 0xff, move, GLUT_KEY_DOWN + 0xff);
 	return argc;	/* Return argc with first non-x11 argument pointer */
 }
 
@@ -100,6 +113,33 @@ static void gl_print_quad(float *coords, int tex)
 	glTexCoord2f(0.0f, 1.0f);
 	glVertex3f(coords[9], coords[10],  coords[11]);
 	glEnd();
+}
+
+static void drawSnowMan() {
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+// Draw Body
+    glTranslatef(0.0f ,0.75f, 0.0f);
+    glutSolidSphere(0.75f,20,20);
+
+// Draw Head
+    glTranslatef(0.0f, 1.0f, 0.0f);
+    glutSolidSphere(0.25f,20,20);
+
+// Draw Eyes
+    glPushMatrix();
+    glColor3f(0.0f,0.0f,0.0f);
+    glTranslatef(0.05f, 0.10f, 0.18f);
+    glutSolidSphere(0.05f,10,10);
+    glTranslatef(-0.1f, 0.0f, 0.0f);
+    glutSolidSphere(0.05f,10,10);
+    glPopMatrix();
+
+// Draw Nose
+    glColor3f(1.0f, 0.5f , 0.5f);
+    glRotatef(0.0f,1.0f, 0.0f, 0.0f);
+    glutSolidCone(0.08f,0.5f,10,2);
 }
 
 static void gl_redraw(void)
@@ -134,8 +174,44 @@ static void gl_redraw(void)
 		move_quad(quad, 0, 2.0);
 		gl_print_quad(quad, tex);
 	}
+    drawSnowMan();
 	glutSwapBuffers();
 }
+
+void gl_redraw2(void)
+{
+    int i, j;
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Reset transformations
+    glLoadIdentity();
+    // Set the camera
+    gluLookAt(  x, 1.0f, z,
+            x+lx, 1.0f,  z+lz,
+            0.0f, 1.0f,  0.0f);
+
+        // Draw ground
+    glColor3f(0.9f, 0.9f, 0.9f);
+    glBegin(GL_QUADS);
+        glVertex3f(-100.0f, 0.0f, -100.0f);
+        glVertex3f(-100.0f, 0.0f,  100.0f);
+        glVertex3f( 100.0f, 0.0f,  100.0f);
+        glVertex3f( 100.0f, 0.0f, -100.0f);
+    glEnd();
+
+        // Draw 36 SnowMen
+    for(i = -3; i < 3; i++)
+        for(j=-3; j < 3; j++) {
+            glPushMatrix();
+            glTranslatef(i*10.0,0,j * 10.0);
+            drawSnowMan();
+            glPopMatrix();
+        }
+
+    glutSwapBuffers();
+}
+
 
 static void change_texture(int t)
 {
@@ -167,6 +243,25 @@ static void move(int t)
 		case 'd': pos[0] += delta; break;
 		case 'q': pos[2] -= delta; break;
 		case 'e': pos[2] += delta; break;
+        case (GLUT_KEY_LEFT + 0xff):
+            angle -= 0.01f;
+            lx = sin(angle);
+            lz = -cos(angle);
+            break;
+        case (GLUT_KEY_RIGHT + 0xff):
+            angle += 0.01f;
+            lx = sin(angle);
+            lz = -cos(angle);
+            break;
+        case (GLUT_KEY_UP + 0xff):
+            x += lx * delta;
+            z += lz * delta;
+            break;
+        case (GLUT_KEY_DOWN + 0xff):
+            x -= lx * delta;
+            z -= lz * delta;
+            break;
+        case '0': exit(0);
 	}
 }
 
@@ -200,6 +295,11 @@ static void gl_resize(int w, int h)
 static void gl_keypress(unsigned char k, int x, int y)
 {
 	input_set(k);
+}
+
+static void gl_special_keypress(int k, int xx, int yy)
+{
+    input_set(k + 0xff);
 }
 
 void gl_loop(void)

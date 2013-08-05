@@ -1,7 +1,7 @@
 #include <input.h>
 #include <string.h>
 
-#define NUMKEYS 256
+#define NUMKEYS 512
 
 struct key_callback {
 	int set;
@@ -11,7 +11,6 @@ struct key_callback {
 
 struct key_callback key[NUMKEYS];
 
-/* opengl initialization boilerplate */
 int input_start(void)
 {
 	memset(key, 0, sizeof(struct key_callback) * NUMKEYS);
@@ -29,7 +28,7 @@ void input_poll(void)
 {
 	int i;
 
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < NUMKEYS; i++) {
 		if (key[i].set == 1) {
 			if (key[i].callback != NULL)
 				key[i].callback(key[i].data);
